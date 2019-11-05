@@ -916,6 +916,11 @@ class File
             }
         }
 
+        // If the warning/error is ignored in the baseline definition short circuit here
+        if ($this->config->baseline->isIgnored() === true) {
+            return false;
+        }
+
         $oppositeType = 'warning';
         if ($error === false) {
             $oppositeType = 'error';

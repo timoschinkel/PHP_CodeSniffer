@@ -12,6 +12,8 @@
 
 namespace PHP_CodeSniffer;
 
+use PHP_CodeSniffer\Baseline\DefinitionChecker;
+use PHP_CodeSniffer\Baseline\DisabledChecker;
 use PHP_CodeSniffer\Exceptions\RuntimeException;
 use PHP_CodeSniffer\Exceptions\DeepExitException;
 
@@ -133,6 +135,7 @@ class Config
         'stdinContent'    => null,
         'stdinPath'       => null,
         'unknown'         => null,
+        'baseline'        => null,
     ];
 
     /**
@@ -497,6 +500,7 @@ class Config
         $this->stdinContent    = null;
         $this->stdinPath       = null;
         $this->unknown         = [];
+        $this->baseline        = new DisabledChecker();
 
         $standard = self::getConfigData('default_standard');
         if ($standard !== null) {
@@ -1216,8 +1220,17 @@ class Config
                     break;
                 }
 
-                $this->tabWidth = (int) substr($arg, 10);
+                $this->tabWidth = (int)substr($arg, 10);
                 self::$overriddenDefaults['tabWidth'] = true;
+            } elseif (substr($arg, 0, 9) === 'baseline=') {
+                $filename = substr($arg, 9);
+                if (is_readable($filename) === false) {
+                    $error  = 'ERROR: Baseline definition is not readable'.PHP_EOL.PHP_EOL;
+                    $error .= $this->printShortUsage(true);
+                    throw new DeepExitException($error, 3);
+                }
+
+                $this->baseline = new DefinitionChecker($filename);
             } else {
                 if ($this->dieOnUnknownArg === false) {
                     $eqPos = strpos($arg, '=');
